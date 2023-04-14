@@ -122,4 +122,58 @@ busca :: Cola -> Cargo -> Maybe Persona
 busca VaciaC _ = Nothing
 busca (Encolada _persona _cola) cargo | _persona == Docente cargo = Just _persona
                                       | otherwise = busca _cola cargo
---Aca pongo _cola porque en la primera cola que se fija es en 'Encolada _persona _cola' entonces se fija en la primer persona que es _persona y si no encuentra va a fijarse en la otra _cola = Encolada _persona2 _colaSiguiente
+--Aca pongo _cola porque en la primera cola que se fija es en 'Encolada _persona _cola' 
+--entonces se fija en la primer persona que es _persona y si no encuentra va a fijarse 
+--en la otra _cola = Encolada _persona2 _colaSiguiente
+
+--8)
+data ListaAsoc a b = Vacia | Nodo a b ( ListaAsoc a b ) deriving Show
+
+type Diccionario = ListaAsoc String String
+type Padron = ListaAsoc Int String
+
+--a)¿Como se debe instanciar el tipo ListaAsoc para representar la informaci ́on almacenada en una gu ́ıa telef ́onica?
+type GuiaTelefonica = ListaAsoc String Int
+
+--b)
+la_long :: ListaAsoc a b -> Int
+la_long Vacia = 0
+la_long (Nodo a b _lista) = 2 + la_long _lista -- Porque ya tengo 2 elementos que son a b
+
+la_concat :: ListaAsoc a b -> ListaAsoc a b -> ListaAsoc a b
+la_concat _lista1 Vacia = _lista1
+la_concat Vacia _lista2 = _lista2
+la_concat (Nodo a b _lista1) _lista2 = (Nodo a b (la_concat _lista1 _lista2)) 
+
+{- Es como si al primer parametro lo desarma en 'Nodo a b _continuacionLista1'
+y luego _lista2, entonces arma un nuevo nodo con a b: 'Nodo a b ...' y
+en el tercer parametro recibe la funcion con _continuacionlista1: 'Nodo a b (la_concat _continuacionlista1 _lista2)'
+.. y asi le va sacando los primeros 2 elementos a  _continuacionlista1 hasta que quede 'Vacia' y es cuando
+la reemplazo por _lista2 para que siga con esa lista hasta que tambien quede vacia y termine de unir lo que reste
+-}
+
+la_agregar :: Eq a => ListaAsoc a b -> a -> b -> ListaAsoc a b {- , 
+que agrega un nodo a la lista de asociaciones si la clave no est ́a en la lista, o actualiza el valor si la clave ya se encontraba. -}
+la_agregar Vacia a b = Nodo a b Vacia
+la_agregar (Nodo a b _lista) clave valor | a == clave = Nodo a valor _lista
+                                         | otherwise = Nodo a b (la_agregar _lista clave valor )
+
+{- Voy a definir un sinonimo de tipo para representar al [(a,b)] porque sino no me lo va a representar como Lista -}
+{- type ListaPares a b = [(a, b)]  -}
+la_pares :: ListaAsoc a b -> [(a, b)] 
+la_pares Vacia = []
+la_pares (Nodo a b _lista) = (a,b) : (la_pares _lista)
+
+la_busca :: Eq a => ListaAsoc a b -> a -> Maybe b
+la_busca Vacia _ = Nothing
+la_busca (Nodo a b _lista) clave | a == clave = Just b
+                                | otherwise = la_busca _lista clave
+
+la_borrar :: Eq a => a-> ListaAsoc a b -> ListaAsoc a b
+la_borrar _ Vacia = Vacia
+la_borrar clave (Nodo a b _lista) | clave == a = la_borrar clave _lista {- Es como si aca se fijara solo en la primera clave de la lista, si llega a ser = , -}
+                                | otherwise = Nodo a b (la_borrar clave _lista)
+{-Recibo una listaAsoc que la voy a desarmar en: Nodo a b _lista , para ver si el primer nodo coincide con la clave, si llega a ser el caso , voy a 'ignorar' ese nodo
+llamando 'la_borrar' con la continuacion de la lista para ver si encuentra otra coincidencia.
+En el otro caso, voy a pegar el primer nodo a lo que me devuelva la funcion con o sin el elemento que estoy buscando
+ -}
